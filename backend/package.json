@@ -1,0 +1,22 @@
+{
+  "name": "roster-saas-backend",
+  "version": "0.1.0",
+  "description": "Multi-tenant roster SaaS backend (Node + Express + PostgreSQL)",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "migrate": "knex migrate:latest",
+    "migrate:rollback": "knex migrate:rollback"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "knex": "^3.1.0",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
