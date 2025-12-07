@@ -1,178 +1,199 @@
-{% extends 'admin/base_site.html' %}
-{% load i18n static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Roster Reports Dashboard</title>
+    <link rel="stylesheet" href="/ui.css" />
+    <style>
+      body { background: var(--color-background); color: #e2e8f0; }
+      .page { max-width: 1200px; margin: 0 auto 64px; padding: 28px 18px; }
+      .page h1 { margin: 0; font-family: var(--font-heading); }
+      .page__intro { color: #cbd5e1; margin: 8px 0 0; max-width: 720px; }
+      .page__header { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 16px 0; }
+      .card { background: rgba(255, 255, 255, 0.96); color: var(--color-strong); border-radius: var(--radius-md); padding: 16px; border: 1px solid var(--color-border); box-shadow: var(--shadow-md); }
+      .table-wrap { margin-top: 18px; }
+    </style>
+  </head>
+  <body>
+    <nav class="top-nav">
+      <div class="top-nav__inner">
+        <div class="brand">
+          <span class="brand__title">Roster SaaS</span>
+          <span class="brand__subtitle">Reports dashboard</span>
+        </div>
+        <div class="top-nav__links">
+          <a class="nav-link" data-nav="home" href="/index.html">Home</a>
+          <a class="nav-link" data-nav="dashboard" href="/location_roster_list.html">Tenant Dashboard</a>
+          <a class="nav-link" data-nav="builder" href="/location_roster_builder.html">Roster Builder</a>
+          <a class="nav-link" data-nav="list" href="/location_roster_list.html">Roster List</a>
+          <a class="nav-link" data-nav="reports" href="/roster_reports_dashboard.html">Reports</a>
+        </div>
+      </div>
+    </nav>
 
-{% block extrastyle %}
-  {{ block.super }}
-  <link rel="stylesheet" href="{% static 'vendor/datatables/datatables.min.css' %}">
-  <link rel="stylesheet" href="{% static 'vendor/datatables/buttons/buttons.dataTables.min.css' %}">
-  <link rel="stylesheet" href="{% static 'reports/css/report_tables.css' %}">
-  <style>
-    .roster-dashboard { max-width: 1180px; margin: 0 auto 36px; padding: 16px; }
-    .roster-dashboard h2 { margin-bottom: 8px; }
-    .roster-dashboard .intro { color: #4b5563; margin-bottom: 20px; }
-    .roster-dashboard .filters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
-    .roster-dashboard .filter { display: flex; flex-direction: column; gap: 6px; }
-    .roster-dashboard label { font-weight: 600; font-size: 13px; color: #1f2937; }
-    .roster-dashboard select, .roster-dashboard input { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; min-width: 180px; }
-    .roster-dashboard .btn-apply { align-self: flex-end; padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; background: #0c4b33; color: #fff; }
-    .roster-dashboard .btn-reset { align-self: flex-end; padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: 1px solid #0c4b33; background: #fff; color: #0c4b33; font-weight: 600; }
-    .roster-dashboard .btn-reset:hover { background: #f0fdf4; }
-    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; background: #e0f2fe; color: #075985; font-weight: 600; font-size: 12px; }
-    .record-pill { display: inline-flex; flex-direction: column; gap: 6px; padding: 8px 12px; border-radius: 12px; background: #0f172a; color: #fff; font-weight: 600; font-size: 12px; line-height: 1.4; box-shadow: 0 12px 20px -18px rgba(15, 23, 42, 0.65); }
-    .record-pill .badge { align-self: flex-start; margin-top: 4px; }
-    @media (max-width: 768px) {
-      .roster-dashboard .filters { flex-direction: column; }
-      .roster-dashboard select, .roster-dashboard input { min-width: auto; }
-    }
-  </style>
-{% endblock %}
+    <main class="page">
+      <header class="page__header">
+        <div>
+          <h1>Roster Deployment Summary</h1>
+          <p class="page__intro">Browse published rosters, open print views, or reopen schedules for edits.</p>
+          <p class="icon-note">Place icons named <strong>reports.svg</strong> and <strong>dashboard.svg</strong> inside <code>frontend/public/icons/</code> to decorate this header.</p>
+        </div>
+      </header>
 
-{% block content %}
-<div id="content-main" class="roster-dashboard module report-page-wrapper">
-  <h2>{% trans "Roster Deployment Summary" %}</h2>
-  <p class="intro">{% trans "Browse published rosters, open Form PAAF-100-OPAT-1.0 print views, or reopen schedules for edits." %}</p>
+      <div class="grid">
+        <div class="card">
+          <div class="input-field">
+            <label for="tenantInput">Tenant ID</label>
+            <input id="tenantInput" type="text" placeholder="Tenant ID" />
+          </div>
+          <div class="input-field">
+            <label for="locationFilter">Location</label>
+            <input id="locationFilter" type="text" placeholder="All locations" />
+          </div>
+        </div>
+        <div class="card">
+          <div class="input-field">
+            <label for="yearFilter">Year</label>
+            <input id="yearFilter" type="number" min="2000" max="2100" placeholder="All years" />
+          </div>
+          <div class="input-field">
+            <label for="monthFilter">Month</label>
+            <select id="monthFilter">
+              <option value="">All months</option>
+              <option value="01">January</option>
+              <option value="02">February</option>
+              <option value="03">March</option>
+              <option value="04">April</option>
+              <option value="05">May</option>
+              <option value="06">June</option>
+              <option value="07">July</option>
+              <option value="08">August</option>
+              <option value="09">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+          </div>
+        </div>
+        <div class="card">
+          <p class="section-subtitle">Design system summary</p>
+          <p class="card__hint">Headings: Poppins · Body: Inter</p>
+          <p class="card__hint">Palette: Primary #2563eb, Secondary #7c3aed, Accent #10b981</p>
+          <p class="card__hint">Buttons: .btn-primary, .btn-secondary, .btn-outline, .btn-danger</p>
+        </div>
+      </div>
 
-  <div class="filters">
-    <div class="filter">
-      <label for="filterLocation">{% trans "Location" %}</label>
-      <select id="filterLocation">
-        <option value="">{% trans "All locations" %}</option>
-        {% for code in available_locations %}
-          <option value="{{ code }}">{{ code }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="filter">
-      <label for="filterYear">{% trans "Year" %}</label>
-      <select id="filterYear">
-        <option value="">{% trans "All years" %}</option>
-        {% for year in available_years %}
-          <option value="{{ year }}">{{ year }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="filter">
-      <label for="filterMonth">{% trans "Month" %}</label>
-      <select id="filterMonth">
-        <option value="">{% trans "All months" %}</option>
-        {% for value, label in month_choices %}
-          <option value="{{ value }}">{{ label }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="filter">
-      <button type="button" class="btn-apply" id="applyFilters">{% trans "Apply" %}</button>
-    </div>
-    <div class="filter">
-      <button type="button" class="btn-reset" id="resetFilters">{% trans "Reset" %}</button>
-    </div>
-  </div>
+      <div class="table-wrap">
+        <table class="table-shell" id="reportTable">
+          <thead>
+            <tr>
+              <th>Location</th>
+              <th>Title</th>
+              <th>Period</th>
+              <th>Shift Mode</th>
+              <th>Print</th>
+              <th>Updated</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p id="emptyState" class="empty-state" hidden>No rosters available for this view.</p>
+    </main>
 
-  <table id="rosterTable" class="display nowrap" style="width: 100%">
-    <thead>
-      <tr>
-        <th>{% trans "Location" %}</th>
-        <th>{% trans "Period" %}</th>
-        <th>{% trans "Effective From" %}</th>
-        <th>{% trans "Duration" %}</th>
-        <th>{% trans "Cycle" %}</th>
-        <th>{% trans "Developed" %}</th>
-        <th>{% trans "Verified" %}</th>
-        <th>{% trans "Approved" %}</th>
-        <th>{% trans "Print" %}</th>
-        <th>{% trans "Updated" %}</th>
-      </tr>
-    </thead>
-  </table>
-</div>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const tenantFromQuery = params.get('tenant');
+      const storedTenant = localStorage.getItem('rosterTenantId');
+      const tenantInput = document.getElementById('tenantInput');
+      const locationFilter = document.getElementById('locationFilter');
+      const yearFilter = document.getElementById('yearFilter');
+      const monthFilter = document.getElementById('monthFilter');
+      const tableBody = document.querySelector('#reportTable tbody');
+      const emptyState = document.getElementById('emptyState');
 
-<script src="{% static 'vendor/jquery/jquery-3.7.1.min.js' %}"></script>
-<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
-<script src="{% static 'vendor/datatables/buttons/dataTables.buttons.min.js' %}"></script>
-<script>
-  (function() {
-    const tableEl = $('#rosterTable');
-    const locationSelect = document.getElementById('filterLocation');
-    const yearSelect = document.getElementById('filterYear');
-    const monthSelect = document.getElementById('filterMonth');
-    const applyButton = document.getElementById('applyFilters');
-    const resetButton = document.getElementById('resetFilters');
+      function currentTenant() {
+        const id = (tenantInput.value || tenantFromQuery || storedTenant || '').trim();
+        if (id) localStorage.setItem('rosterTenantId', id);
+        return id;
+      }
 
-    function buildUrl() {
-      const params = new URLSearchParams();
-      if (locationSelect.value) params.append('location', locationSelect.value);
-      if (yearSelect.value) params.append('year', yearSelect.value);
-      if (monthSelect.value) params.append('month', monthSelect.value);
-      const query = params.toString();
-      return query ? (`{% url 'reports:roster_reports_dashboard_data' %}?` + query) : `{% url 'reports:roster_reports_dashboard_data' %}`;
-    }
+      function updateNavLinks() {
+        const tenant = currentTenant();
+        document.querySelectorAll('[data-nav]').forEach((link) => {
+          const base = link.getAttribute('href');
+          const url = tenant ? `${base}?tenant=${encodeURIComponent(tenant)}` : base;
+          link.setAttribute('href', url);
+        });
+      }
 
-    const dataTable = tableEl.DataTable({
-      dom: "<'report-toolbar'<'toolbar-group'l><'toolbar-group'f>>" + "<'table-responsive't>" + "<'report-footer'<'toolbar-group'i><'toolbar-group'p>>",
-      scrollX: true,
-      pageLength: 20,
-      ajax: buildUrl(),
-      columns: [
-        { data: 'location' },
-        {
-          data: null,
-          render: function(row) {
-            return `<div class="record-pill" style="background:#0f172a;color:#fff">${row.title}<br><span class="badge" style="background:#e2e8f0;color:#1f2937">${row.period}</span></div>`;
-          },
-          orderable: false
-        },
-        {
-          data: 'effective_from',
-          render: function(value) {
-            if (!value) return '';
-            const date = new Date(value);
-            return date.toLocaleDateString();
-          }
-        },
-        {
-          data: 'duration_days',
-          render: function(value) {
-            return value ? `${value} {% trans "days" %}` : '';
-          }
-        },
-        {
-          data: 'shift_cycle_length',
-          render: function(value) {
-            return value ? `${value} {% trans "day cycle" %}` : '';
-          }
-        },
-        { data: 'developed_by' },
-        { data: 'verified_by' },
-        { data: 'approved_by' },
-        {
-          data: 'print_url',
-          orderable: false,
-          render: function(value) {
-            if (!value) return '<span class="badge">{% trans "Unavailable" %}</span>';
-            return `<a href="${value}" target="_blank" rel="noopener" class="badge" style="background:#22c55e;color:#064e3b">{% trans "Print" %}</a>`;
-          }
-        },
-        {
-          data: 'updated_at',
-          render: function(value) {
-            if (!value) return '';
-            const date = new Date(value);
-            return date.toLocaleString();
-          }
+      async function loadReports() {
+        const tenant = currentTenant();
+        if (!tenant) {
+          tableBody.innerHTML = '';
+          emptyState.hidden = false;
+          emptyState.textContent = 'Enter a tenant ID to load reports.';
+          return;
         }
-      ]
-    });
+        try {
+          const response = await fetch('/api/roster', { headers: { 'x-tenant-id': tenant } });
+          const data = await response.json();
+          renderRows(Array.isArray(data) ? data : []);
+        } catch (error) {
+          tableBody.innerHTML = `<tr><td colspan="6">${error.message}</td></tr>`;
+          emptyState.hidden = true;
+        }
+      }
 
-    applyButton.addEventListener('click', function() {
-      dataTable.ajax().url(buildUrl()).load();
-    });
+      function renderRows(rows) {
+        const location = (locationFilter.value || '').toLowerCase();
+        const year = yearFilter.value;
+        const month = monthFilter.value;
+        let visible = 0;
 
-    resetButton.addEventListener('click', function() {
-      locationSelect.value = '';
-      yearSelect.value = '';
-      monthSelect.value = '';
-      dataTable.ajax().url(buildUrl()).load();
-    });
-  })();
-</script>
-{% endblock %}
+        tableBody.innerHTML = rows
+          .filter((row) => {
+            const locMatches = !location || (row.location || '').toLowerCase().includes(location);
+            const start = row.start_date || '';
+            const matchesYear = !year || start.startsWith(`${year}-`);
+            const matchesMonth = !month || start.slice(5, 7) === month;
+            return locMatches && matchesYear && matchesMonth;
+          })
+          .map((row) => {
+            visible += 1;
+            const tenant = encodeURIComponent(currentTenant());
+            const printLink = `/roster_print.html?tenant=${tenant}`;
+            return `
+              <tr>
+                <td>${row.location || '—'}</td>
+                <td>${row.name || 'Untitled roster'}</td>
+                <td>${row.start_date || '—'} → ${row.end_date || '—'}</td>
+                <td>${row.shift_mode || 'rotation'}</td>
+                <td><a class="btn btn-primary" href="${printLink}">Print</a></td>
+                <td>${row.updated_at || '—'}</td>
+              </tr>
+            `;
+          })
+          .join('');
+
+        emptyState.hidden = visible > 0;
+        if (!visible) {
+          emptyState.textContent = 'No rosters match the current filters.';
+        }
+      }
+
+      [tenantInput, locationFilter, yearFilter, monthFilter].forEach((field) => {
+        field.addEventListener('input', () => {
+          updateNavLinks();
+          loadReports();
+        });
+      });
+
+      tenantInput.value = tenantFromQuery || storedTenant || '';
+      updateNavLinks();
+      loadReports();
+    </script>
+  </body>
+</html>

@@ -4,9 +4,26 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Roster Studio · Multi-tenant playground</title>
+    <link rel="stylesheet" href="/ui.css" />
     <link rel="stylesheet" href="/roster_builder.css" />
   </head>
   <body>
+    <nav class="top-nav">
+      <div class="top-nav__inner">
+        <div class="brand">
+          <span class="brand__title">Roster SaaS</span>
+          <span class="brand__subtitle">Tenant workspace</span>
+        </div>
+        <div class="top-nav__links">
+          <a class="nav-link" data-nav="home" href="/index.html">Home</a>
+          <a class="nav-link" data-nav="dashboard" href="/location_roster_list.html">Tenant Dashboard</a>
+          <a class="nav-link" data-nav="builder" href="/location_roster_builder.html">Roster Builder</a>
+          <a class="nav-link" data-nav="list" href="/location_roster_list.html">Roster List</a>
+          <a class="nav-link" data-nav="reports" href="/roster_reports_dashboard.html">Reports</a>
+        </div>
+      </div>
+    </nav>
+
     <main class="page">
       <header class="hero">
         <div>
@@ -14,12 +31,12 @@
           <h1>Roster Studio</h1>
           <p class="lede">
             Build tenant-scoped rosters in two modes: <strong>rotation</strong> (code-only) or
-            <strong>time-bound</strong> (shifts map to time slots). Everything here talks directly to the
-            Express API so you can validate the full stack quickly.
+            <strong>time-bound</strong> (shifts map to time slots). Everything here talks directly to the Express API so you can validate
+            the full stack quickly.
           </p>
           <div class="hero__badges">
-            <span class="pill">Backend: http://localhost:4000</span>
-            <span class="pill pill--subtle">Header: x-tenant-id</span>
+            <span class="badge badge--primary">Backend: http://localhost:4000</span>
+            <span class="badge badge--accent">Header: x-tenant-id</span>
           </div>
         </div>
         <div class="hero__callout">
@@ -54,6 +71,7 @@
             <input id="tenantId" type="text" placeholder="uuid" />
           </label>
           <p class="card__hint" id="tenantStatus" role="status"></p>
+          <p class="card__hint">Tip: Place <strong>tenant.svg</strong> inside <code>frontend/public/icons/</code> to display an icon beside this section.</p>
         </article>
 
         <article class="card">
@@ -251,6 +269,35 @@
       </section>
     </main>
 
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const tenantFromQuery = params.get('tenant');
+      const storedTenant = localStorage.getItem('rosterTenantId');
+      const tenantIdInput = document.getElementById('tenantId');
+
+      function setTenantInput(value) {
+        if (!value) return;
+        tenantIdInput.value = value;
+      }
+
+      setTenantInput(tenantFromQuery || storedTenant || '');
+
+      function updateNavLinks() {
+        const tenant = tenantIdInput.value || tenantFromQuery || '';
+        document.querySelectorAll('[data-nav]').forEach((link) => {
+          const base = link.getAttribute('href');
+          const url = tenant ? `${base}?tenant=${encodeURIComponent(tenant)}` : base;
+          link.setAttribute('href', url);
+        });
+      }
+
+      tenantIdInput.addEventListener('input', () => {
+        localStorage.setItem('rosterTenantId', tenantIdInput.value.trim());
+        updateNavLinks();
+      });
+
+      updateNavLinks();
+    </script>
     <script src="/roster_builder.js" defer></script>
   </body>
 </html>

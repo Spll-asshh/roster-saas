@@ -1,6 +1,9 @@
 (function () {
   const API_BASE = '/api';
-  const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000001';
+
+  const params = new URLSearchParams(window.location.search);
+  const tenantFromQuery = params.get('tenant');
+  const storedTenant = localStorage.getItem('rosterTenantId');
 
   const tenantForm = document.getElementById('tenantForm');
   const tenantIdInput = document.getElementById('tenantId');
@@ -30,14 +33,21 @@
   };
 
   function getTenantId() {
-    return (tenantIdInput.value || DEFAULT_TENANT_ID).trim();
+    const value = (tenantIdInput.value || tenantFromQuery || storedTenant || '').trim();
+    if (value) {
+      localStorage.setItem('rosterTenantId', value);
+    }
+    return value;
   }
 
   async function fetchJson(path, options = {}) {
     const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
 
     if (options.requireTenant !== false) {
-      headers['x-tenant-id'] = getTenantId();
+      const tenantId = getTenantId();
+      if (tenantId) {
+        headers['x-tenant-id'] = tenantId;
+      }
     }
 
     const response = await fetch(`${API_BASE}${path}`, {
@@ -277,6 +287,7 @@
       try {
         const tenant = await fetchJson('/tenants', { method: 'POST', body: JSON.stringify(data) });
         tenantIdInput.value = tenant.id;
+        localStorage.setItem('rosterTenantId', tenant.id);
         tenantStatus.textContent = `Created tenant ${tenant.name}`;
         await refreshShiftTemplates();
         await refreshEmployees();
@@ -357,7 +368,10 @@
 
   function hydrateDefaults() {
     if (!tenantIdInput.value) {
-      tenantIdInput.value = DEFAULT_TENANT_ID;
+      const fallback = tenantFromQuery || storedTenant;
+      if (fallback) {
+        tenantIdInput.value = fallback;
+      }
     }
   }
 
