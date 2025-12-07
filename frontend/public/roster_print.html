@@ -1,0 +1,282 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Roster – {{ header_title }}</title>
+    <style>
+        @page { size: A4 landscape; margin: 16mm 12mm 18mm; }
+        body { margin: 0; font-family: "Helvetica", Arial, sans-serif; background: #f3f6f9; color: #1f2937; min-height: 100vh; display: flex; flex-direction: column; }
+        .wrapper { flex: 1 0 auto; max-width: 260mm; margin: 0 auto; padding: 8mm 0 24mm; display: flex; flex-direction: column; gap: 18px; }
+        .no-print { position: fixed; top: 16px; right: 24px; z-index: 50; }
+        .no-print button { background: #0c4b33; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; box-shadow: 0 12px 24px -20px rgba(12, 75, 51, 0.65); }
+        .no-print button:hover { background: #128f8b; }
+        .form-header { display: grid; grid-template-columns: 70px 1fr auto; gap: 16px; align-items: center; background: linear-gradient(135deg, #0097B2, #128F8B); color: #fff; padding: 12px 18px; border-radius: 16px; }
+        .form-header img { width: 70px; height: auto; }
+        .form-heading { text-align: center; letter-spacing: 0.04em; }
+        .form-heading .org-name { font-size: 15px; font-weight: 700; }
+        .form-heading .org-division { font-size: 13px; font-weight: 600; margin-top: 2px; text-transform: uppercase; }
+        .form-heading .org-subtitle { font-size: 11px; font-weight: 600; margin-top: 4px; letter-spacing: 0.12em; }
+        .form-number { font-size: 11px; font-weight: 700; text-align: right; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 18px; }
+        .info-card { background: #fff; border: 1px solid rgba(18, 143, 139, 0.12); border-radius: 12px; padding: 10px 12px; box-shadow: 0 12px 24px -22px rgba(15, 23, 42, 0.38); }
+        .info-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; font-weight: 600; }
+        .info-card .value { margin-top: 4px; font-size: 14px; font-weight: 600; color: #1f2937; }
+        .section { background: #fff; border: 1px solid rgba(18, 143, 139, 0.12); border-radius: 14px; padding: 14px 18px; box-shadow: 0 16px 32px -26px rgba(15, 23, 42, 0.35); }
+        .section h3 { margin-top: 0; color: #128F8B; letter-spacing: 0.04em; text-transform: uppercase; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #d4dce3; padding: 6px 8px; font-size: 11px; vertical-align: top; }
+        thead th { background: linear-gradient(135deg, #0097B2, #38B6FF); color: #fff; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+        .rotation-table { display: flex; flex-direction: column; gap: 12px; }
+        .rotation-header { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between; }
+        .shift-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 10px; color: #0f172a; }
+        .shift-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+        .shift-legend-swatch { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+        .rotation-charts { display: flex; flex-direction: column; gap: 12px; }
+        .rotation-chart { background: #f8fafc; border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 12px; padding: 12px 14px; box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04); }
+        .rotation-chart table { table-layout: fixed; width: 100%; border-collapse: collapse; }
+        .rotation-chart thead th { background: linear-gradient(135deg, #0f172a, #1d4ed8); font-size: 10px; padding: 6px 4px; line-height: 1.2; white-space: normal; word-break: break-word; text-transform: none; letter-spacing: 0.04em; }
+        .rotation-chart tbody th { background: #e2e8f0; font-size: 10px; text-transform: none; letter-spacing: 0; padding: 6px 8px; text-align: left; }
+        .rotation-chart tbody tr.row-rest th { background: #fef3c7; color: #92400e; }
+        .rotation-chart tbody tr.row-off th { background: #fee2e2; color: #b91c1c; }
+        .rotation-chart tbody td { padding: 4px 4px; font-size: 9px; text-align: center; min-height: 24px; }
+        .rotation-chart tbody td .cell-content { display: flex; flex-direction: column; gap: 2px; align-items: center; }
+        .shift-tag { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 28px; padding: 3px 6px; border-radius: 8px; color: #fff; font-size: 9px; font-weight: 700; box-shadow: 0 6px 16px -12px rgba(15, 23, 42, 0.55); line-height: 1.2; }
+        .shift-tag .shift-code { font-size: 10px; letter-spacing: 0.05em; }
+        .shift-tag .shift-title { display: block; font-size: 8px; font-weight: 500; opacity: 0.85; }
+        .rotation-chart thead .day-label { font-weight: 700; display: block; }
+        .rotation-chart thead .weekday-label { display: block; font-size: 9px; font-weight: 500; color: #cbd5f5; }
+        .rotation-chart tbody td.empty { background: rgba(148, 163, 184, 0.12); color: #64748b; font-style: italic; }
+        .day-card { background: #fff; border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 14px; margin-bottom: 16px; padding: 12px 16px; box-shadow: 0 14px 28px -24px rgba(15, 23, 42, 0.45); }
+        .day-header { font-weight: 700; color: #0f172a; font-size: 13px; letter-spacing: 0.04em; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: baseline; }
+        .shift-block { border: 1px solid rgba(148, 163, 184, 0.35); border-radius: 12px; margin-bottom: 12px; padding: 10px 12px; background: #f8fafc; }
+        .shift-block:last-child { margin-bottom: 0; }
+        .shift-heading { font-weight: 700; color: #075985; font-size: 12px; letter-spacing: 0.05em; margin-bottom: 8px; }
+        .shift-block table { background: #fff; border-radius: 10px; overflow: hidden; }
+        .shift-block tbody tr:nth-child(even) { background: #f1f5f9; }
+        .empty-row { font-size: 11px; color: #6b7280; }
+        .non-op-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+        .non-op-card { border: 1px solid rgba(148, 163, 184, 0.35); border-radius: 12px; padding: 10px 12px; background: #f9fafb; box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.12); }
+        .non-op-card h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #0f172a; }
+        .non-op-card ul { list-style: none; padding: 0; margin: 0; }
+        .non-op-card li { font-size: 11px; padding: 3px 0; border-bottom: 1px dashed rgba(148, 163, 184, 0.45); }
+        .non-op-card li:last-child { border-bottom: none; }
+        .category-chip { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; }
+        .category-chip.operational { background: #dcfce7; color: #166534; }
+        .category-chip.non-operational { background: #fee2e2; color: #b91c1c; }
+        .remarks { white-space: pre-line; color: #374151; }
+        .deployment-disclaimer { margin-top: 14px; font-size: 10px; color: #475569; background: #f8fafc; border: 1px dashed rgba(148, 163, 184, 0.6); border-radius: 12px; padding: 10px 12px; line-height: 1.5; font-style: italic; }
+        .signature-footer { margin-top: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; padding: 0 18px 0; }
+        .signature-slot { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+        .signature-slot:nth-child(2) { align-items: center; }
+        .signature-slot:nth-child(3) { align-items: flex-end; }
+        .signature-line { width: 100%; max-width: 140px; border-bottom: 1px solid rgba(15, 23, 42, 0.4); height: 24px; }
+        .signature-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #1f2937; }
+        .signature-name { font-size: 11px; font-weight: 500; color: #0f172a; }
+
+        @media print {
+            .no-print { display: none; }
+            body { background: #fff; }
+            .wrapper { padding-bottom: 0; }
+            .shift-block { page-break-inside: avoid; }
+            .day-card { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print"><button type="button" onclick="window.print()">🖨 Print</button></div>
+    <div class="wrapper">
+        <div class="form-header">
+            <img src="{% static 'reports/paa_logo.png' %}" alt="PAA Logo" />
+            <div class="form-heading">
+                <div class="org-name">PAKISTAN AIRPORTS AUTHORITY</div>
+                <div class="org-division">{{ header_title }}</div>
+                <div class="org-subtitle">{{ header_subtitle }}</div>
+            </div>
+            <div class="form-number">{{ form_number }}</div>
+        </div>
+
+        <div class="info-grid">
+            {% for card in info_cards %}
+                <div class="info-card">
+                    <div class="label">{{ card.label }}</div>
+                    <div class="value">{{ card.value }}</div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if duty_timings %}
+        <div class="section">
+            <h3>Duty Timings</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Title</th>
+                        <th>Start</th>
+                        <th>End</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for timing in duty_timings %}
+                    <tr>
+                        <td>{{ timing.sequence }}</td>
+                        <td>{{ timing.title }}</td>
+                        <td>{{ timing.start }}</td>
+                        <td>{{ timing.end }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if rotation_chunks %}
+        <div class="section rotation-table">
+            <div class="rotation-header">
+                <h3>Shift Rotation Calendar</h3>
+                {% if shift_styles %}
+                <div class="shift-legend">
+                    {% for shift in shift_styles %}
+                    <span class="shift-legend-item">
+                        <span class="shift-legend-swatch" style="background: {{ shift.color }}"></span>
+                        <span>{{ shift.label }}</span>
+                    </span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            <div class="rotation-charts">
+                {% for chunk in rotation_chunks %}
+                <div class="rotation-chart">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th scope="col">Duty Timings</th>
+                                {% for day in chunk.days %}
+                                    <th scope="col">
+                                        <span class="day-label">{{ day.date|date:"d M" }}</span>
+                                        <span class="weekday-label">{{ day.date|date:"D" }}</span>
+                                    </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in chunk.rows %}
+                                <tr class="row-{{ row.category }}">
+                                    <th scope="row">{{ row.label }}</th>
+                                    {% for cell in row.entries %}
+                                        <td class="{% if not cell %}empty{% endif %}">
+                                            {% if cell %}
+                                            <div class="cell-content">
+                                                {% for shift in cell %}
+                                                    <span class="shift-tag" style="background: {{ shift.color }}" title="{{ shift.label }}">
+                                                        <span class="shift-code">{{ shift.code }}</span>
+                                                        {% if shift.title %}
+                                                            <span class="shift-title">{{ shift.title }}</span>
+                                                        {% endif %}
+                                                    </span>
+                                                {% endfor %}
+                                            </div>
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if shift_deployments %}
+        <div class="section">
+            <h3>Deployment Schedule</h3>
+            {% for shift in shift_deployments %}
+            <div class="shift-block">
+                <div class="shift-heading">{{ shift.label }}</div>
+                {% if shift.rows %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Unit / Position</th>
+                            <th>Category</th>
+                            <th>Officer(s)</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in shift.rows %}
+                        <tr>
+                            <td>{{ row.unit_label }}</td>
+                            <td>
+                                <span class="category-chip {% if row.category_label == 'Operational' %}operational{% else %}non-operational{% endif %}">
+                                    {{ row.category_label }}
+                                </span>
+                            </td>
+                            <td>
+                                {% for officer in row.officers %}
+                                    <div>{{ officer }}</div>
+                                {% empty %}
+                                    <div>—</div>
+                                {% endfor %}
+                            </td>
+                            <td class="remarks">{{ row.remarks|default:'—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                    <div class="empty-row">No assignments recorded for this shift.</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if non_operational_assignments %}
+        <div class="section">
+            <h3>Steady-State &amp; Non-Operational Assignments</h3>
+            <div class="non-op-grid">
+                {% for item in non_operational_assignments %}
+                <div class="non-op-card">
+                    <h4>{{ item.label }}</h4>
+                    <ul>
+                        {% for officer in item.officers %}
+                        <li>{{ officer }}</li>
+                        {% empty %}
+                        <li>—</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% if deployment_disclaimer %}
+        <div class="deployment-disclaimer">{{ deployment_disclaimer }}</div>
+        {% endif %}
+        <div class="signature-footer">
+            <div class="signature-slot">
+                <div class="signature-line"></div>
+                <div class="signature-label">Developed By</div>
+                <div class="signature-name">{{ roster.developed_by.name|default:'—' }}</div>
+            </div>
+            <div class="signature-slot">
+                <div class="signature-line"></div>
+                <div class="signature-label">Verified By</div>
+                <div class="signature-name">{{ roster.verified_by.name|default:'—' }}</div>
+            </div>
+            <div class="signature-slot">
+                <div class="signature-line"></div>
+                <div class="signature-label">Approved By</div>
+                <div class="signature-name">{{ roster.approved_by.name|default:'—' }}</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

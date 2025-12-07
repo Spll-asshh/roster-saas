@@ -1,0 +1,238 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'reports/css/reports.css' %}">
+  <style>
+    .roster-page{max-width:1000px;margin:24px auto;padding:24px 28px;background:#fff;border-radius:20px;box-shadow:0 28px 46px -36px rgba(15,23,42,0.35);border:1px solid rgba(148,163,184,0.35);}
+    .roster-page__header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:20px;}
+    .roster-page__title{margin:0;font-size:1.6rem;font-weight:700;color:#0f172a;}
+    .roster-page__intro{margin:8px 0 0 0;color:#475569;font-size:0.95rem;line-height:1.55;}
+    .roster-page__actions{display:flex;gap:12px;flex-wrap:wrap;}
+    .roster-page__btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:9999px;font-weight:600;text-decoration:none;transition:transform 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease,color 0.2s ease,background 0.2s ease;}
+    .roster-page__btn--primary{background:#0f172a;color:#fff;border:1px solid #0f172a;box-shadow:0 20px 36px -28px rgba(15,23,42,0.7);}
+    .roster-page__btn--primary:hover{transform:translateY(-2px);box-shadow:0 24px 44px -30px rgba(15,23,42,0.8);}
+    .roster-page__btn--secondary{background:#fff;color:#0f172a;border:1px solid rgba(15,23,42,0.6);box-shadow:0 18px 32px -26px rgba(15,23,42,0.12);}
+    .roster-page__btn--secondary:hover{transform:translateY(-2px);box-shadow:0 22px 40px -28px rgba(15,23,42,0.18);background:#f8fafc;}
+    .roster-page__toolbar{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:18px;align-items:flex-end;}
+    .roster-filter{display:flex;flex-direction:column;gap:6px;min-width:180px;}
+    .roster-filter label{font-size:0.8rem;font-weight:600;color:#334155;text-transform:uppercase;letter-spacing:0.05em;}
+    .roster-filter select,.roster-filter input{padding:10px 14px;border-radius:10px;border:1px solid rgba(203,213,225,0.8);font-size:0.9rem;color:#0f172a;min-height:44px;line-height:1.4;width:100%;box-sizing:border-box;}
+    .roster-filter input::placeholder{color:#94a3b8;}
+    .roster-filter button{padding:10px 18px;border-radius:9999px;font-weight:600;border:none;background:#0f172a;color:#fff;cursor:pointer;transition:transform 0.2s ease,box-shadow 0.2s ease;}
+    .roster-filter button:hover{transform:translateY(-1px);box-shadow:0 18px 32px -26px rgba(15,23,42,0.6);}
+    .roster-filter button.roster-filter--clear{background:#fff;color:#0f172a;border:1px solid rgba(15,23,42,0.2);} 
+    .roster-filter button.roster-filter--clear:hover{background:#f1f5f9;}
+    .roster-row--highlight{animation:rosterPulse 2s ease;}
+    @keyframes rosterPulse{0%{background:#e0f2fe;}50%{background:#bae6fd;}100%{background:inherit;}}
+    .roster-table-wrap{overflow-x:auto;border-radius:16px;border:1px solid rgba(203,213,225,0.6);}
+    .roster-table{width:100%;border-collapse:collapse;min-width:760px;}
+    .roster-table thead{background:linear-gradient(135deg,#f8fafc,#e2e8f0);}
+    .roster-table th{font-size:0.85rem;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.06em;padding:12px 14px;text-align:left;border-bottom:1px solid rgba(203,213,225,0.7);}
+    .roster-table td{padding:14px;border-bottom:1px solid rgba(226,232,240,0.8);font-size:0.95rem;color:#0f172a;vertical-align:top;}
+    .roster-table tbody tr:nth-child(even){background:#f8fafc;}
+    .roster-metadata{display:flex;flex-direction:column;gap:4px;}
+    .roster-title{font-weight:600;color:#0f172a;}
+    .roster-period{font-size:0.9rem;color:#475569;}
+    .roster-meta-list{display:flex;flex-direction:column;gap:4px;}
+    .roster-actions{display:flex;gap:10px;flex-wrap:wrap;}
+    .roster-action-link{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:9999px;background:#0f172a;color:#fff;font-size:0.85rem;font-weight:600;text-decoration:none;transition:background 0.2s ease,transform 0.2s ease;}
+    .roster-action-link:hover{background:#1e293b;transform:translateY(-1px);}
+    .roster-action-link--light{background:#e2e8f0;color:#0f172a;}
+    .roster-action-link--light:hover{background:#cbd5ff;}
+    .roster-empty{padding:22px;text-align:center;color:#475569;background:#f8fafc;border-radius:16px;border:1px dashed rgba(148,163,184,0.6);font-weight:500;}
+    .roster-no-results{margin:16px 0 0 0;padding:16px;border-radius:14px;background:#f1f5f9;color:#475569;font-weight:500;display:flex;align-items:center;gap:8px;}
+    .roster-no-results span{font-weight:700;color:#0f172a;}
+    .roster-updated{font-size:0.85rem;color:#475569;margin-top:4px;}
+    @media (max-width:900px){.roster-page{padding:20px;} .roster-page__header{flex-direction:column;align-items:flex-start;} .roster-page__toolbar{flex-direction:column;align-items:stretch;} .roster-table{min-width:640px;}}
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="roster-page">
+    <div class="roster-page__header">
+      <div>
+        <h1 class="roster-page__title">Roster Deployment Workspace &mdash; {{ location_name }}</h1>
+        <p class="roster-page__intro">Browse every saved roster for this location, reopen drafts for edits, or print Form PAAF-100-OPAT-1.0 for distribution.</p>
+      </div>
+      <div class="roster-page__actions">
+        <a class="roster-page__btn roster-page__btn--primary" href="{{ roster_builder_url }}">Create New Roster</a>
+        <a class="roster-page__btn roster-page__btn--secondary" href="{{ export_url }}">Export .xlsx</a>
+        <a class="roster-page__btn roster-page__btn--secondary" href="{% url 'reports:location_dashboard' %}">Back to Dashboard</a>
+      </div>
+    </div>
+
+    {% if location_rosters %}
+    <div class="roster-page__toolbar" role="region" aria-label="Roster filters and navigation">
+      <div class="roster-filter">
+        <label for="rosterQuickJump">Jump to roster</label>
+        <select id="rosterQuickJump">
+          <option value="">Select roster</option>
+          {% for roster in quick_jump %}
+            <option value="{{ roster.id }}">{{ roster.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="roster-filter">
+        <label for="rosterSearch">Search</label>
+        <input id="rosterSearch" type="search" placeholder="Search by title or name">
+      </div>
+      <div class="roster-filter">
+        <label for="rosterYearFilter">Year</label>
+        <select id="rosterYearFilter">
+          <option value="">All years</option>
+          {% for year in available_years %}
+            <option value="{{ year }}">{{ year }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="roster-filter">
+        <label for="rosterMonthFilter">Month</label>
+        <select id="rosterMonthFilter">
+          <option value="">All months</option>
+          {% for value, label in available_months %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="roster-filter">
+        <button type="button" id="rosterFilterReset" class="roster-filter--clear">Reset</button>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if location_rosters %}
+      <div class="roster-table-wrap">
+        <table class="roster-table" id="locationRosterTable">
+          <thead>
+            <tr>
+              <th scope="col">Roster</th>
+              <th scope="col">Effective From</th>
+              <th scope="col">Shifts</th>
+              <th scope="col">Developed / Verified / Approved</th>
+              <th scope="col">Updated</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for roster in location_rosters %}
+              <tr id="roster-row-{{ roster.id }}" data-roster-row data-year="{{ roster.effective_year }}" data-month="{{ roster.effective_month }}" data-search-text="{{ roster.title }} {{ roster.period }} {{ roster.developed_by }} {{ roster.verified_by }} {{ roster.approved_by }}">
+                <td>
+                  <div class="roster-metadata">
+                    <span class="roster-title">{{ roster.title }}</span>
+                    <span class="roster-period">{{ roster.period }}</span>
+                  </div>
+                </td>
+                <td>{{ roster.effective_from|date:"M d, Y" }}</td>
+                <td>{{ roster.shift_count }}</td>
+                <td>
+                  <div class="roster-meta-list">
+                    <span>Developed: {{ roster.developed_by|default:"—" }}</span>
+                    <span>Verified: {{ roster.verified_by|default:"—" }}</span>
+                    <span>Approved: {{ roster.approved_by|default:"—" }}</span>
+                  </div>
+                </td>
+                <td>
+                  {{ roster.updated_at|date:"M d, Y H:i" }}
+                  <div class="roster-updated">Form PAAF-100-OPAT-1.0</div>
+                </td>
+                <td>
+                  <div class="roster-actions">
+                    <a class="roster-action-link" href="{% url 'reports:location_roster_edit' roster.id %}">Open</a>
+                    {% if roster.print_url %}
+                      <a class="roster-action-link roster-action-link--light" href="{{ roster.print_url }}" target="_blank" rel="noopener">Print</a>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p id="rosterNoResults" class="roster-no-results" hidden><span>No rosters match the current filters.</span> Adjust the search, year, or month filters to continue.</p>
+    {% else %}
+      <div class="roster-empty">No rosters have been published for {{ location_name }} yet. Use the button above to create your first schedule.</div>
+    {% endif %}
+  </div>
+  <script>
+    (function() {
+      const table = document.getElementById('locationRosterTable');
+      if (!table) {
+        return;
+      }
+
+      const searchInput = document.getElementById('rosterSearch');
+      const yearFilter = document.getElementById('rosterYearFilter');
+      const monthFilter = document.getElementById('rosterMonthFilter');
+      const resetButton = document.getElementById('rosterFilterReset');
+      const rows = Array.from(table.querySelectorAll('tbody tr[data-roster-row]'));
+      const noResults = document.getElementById('rosterNoResults');
+
+      function applyFilters() {
+        const query = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase().trim();
+        const yearValue = yearFilter ? yearFilter.value : '';
+        const monthValue = monthFilter ? monthFilter.value : '';
+        let visibleCount = 0;
+
+        rows.forEach((row) => {
+          const searchText = (row.dataset.searchText || '').toLowerCase();
+          const matchesSearch = !query || searchText.includes(query);
+          const matchesYear = !yearValue || row.dataset.year === yearValue;
+          const matchesMonth = !monthValue || row.dataset.month === monthValue;
+          const isVisible = matchesSearch && matchesYear && matchesMonth;
+          row.style.display = isVisible ? '' : 'none';
+          if (isVisible) {
+            visibleCount += 1;
+          }
+        });
+
+        if (noResults) {
+          noResults.hidden = visibleCount !== 0;
+        }
+      }
+
+      if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+      }
+      if (yearFilter) {
+        yearFilter.addEventListener('change', applyFilters);
+      }
+      if (monthFilter) {
+        monthFilter.addEventListener('change', applyFilters);
+      }
+      if (resetButton) {
+        resetButton.addEventListener('click', function() {
+          if (searchInput) {
+            searchInput.value = '';
+          }
+          if (yearFilter) {
+            yearFilter.value = '';
+          }
+          if (monthFilter) {
+            monthFilter.value = '';
+          }
+          applyFilters();
+        });
+      }
+
+      applyFilters();
+
+      const quickJump = document.getElementById('rosterQuickJump');
+      if (quickJump) {
+        quickJump.addEventListener('change', function() {
+          const rosterId = this.value;
+          if (!rosterId) {
+            return;
+          }
+          const targetRow = document.getElementById(`roster-row-${rosterId}`);
+          if (targetRow) {
+            targetRow.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            targetRow.classList.add('roster-row--highlight');
+            window.setTimeout(() => targetRow.classList.remove('roster-row--highlight'), 2000);
+          }
+        });
+      }
+    })();
+  </script>
+{% endblock %}

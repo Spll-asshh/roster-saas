@@ -1,0 +1,252 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'reports/css/reports.css' %}">
+  <link rel="stylesheet" href="{% static 'reports/css/roster_builder.css' %}">
+{% endblock %}
+
+{% block extrahead %}
+  <meta charset="utf-8">
+  {{ block.super }}
+  <script src="{% static 'reports/js/roster_builder.js' %}" defer></script>
+{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'reports:location_dashboard' %}">Location Dashboard</a>
+    <span class="separator">›</span>
+    <span>{% if roster %}Edit Roster{% else %}Create Roster{% endif %}</span>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="roster-wizard">
+    {% if show_intro %}
+      <section class="roster-wizard__step roster-wizard__intro is-active" data-wizard-step="intro" id="roster-intro">
+        <h1>Build the next roster for {{ location.location }}</h1>
+        <p>Confirm the scope of your deployment before switching to the workspace. Charts are optional—if they fail to load, you can still continue.</p>
+        <ul class="roster-wizard__list">
+          <li>Review shift counts, duty timings, and units you plan to deploy.</li>
+          <li>Gather approvals and officer assignments needed for Form PAAF-100-OPAT-1.0.</li>
+          <li>Use the next screen to configure shifts, assign teams, and download the finalized roster.</li>
+        </ul>
+        <div class="roster-wizard__actions">
+          <button
+            type="button"
+            class="step-button primary"
+            data-action="wizard-continue"
+          >Continue</button>
+        </div>
+      </section>
+    {% endif %}
+
+    <section
+      id="roster-builder"
+      class="roster-wizard__step{% if not show_intro %} is-active{% endif %}"
+      data-wizard-step="builder"
+      {% if show_intro %}hidden{% endif %}
+    >
+      <div class="roster-builder" data-location-name="{{ location.location }}">
+        <div class="roster-hero">
+          <h1>{% if roster %}Update{% else %}Create{% endif %} Roster for {{ location.location }}</h1>
+          <p>Follow the two-step workflow to configure shift definitions and assign officers. The final submission generates Form <strong>PAAF-100-OPAT-1.0</strong> for distribution.</p>
+        </div>
+
+        <div class="builder-steps" aria-hidden="true">
+          <div class="step-pill is-active" data-step="1">1. Configure Roster</div>
+          <div class="step-pill" data-step="2">2. Assign Officers</div>
+        </div>
+
+        <section id="builder-step-config" class="builder-step is-active" aria-labelledby="builder-step-config-heading">
+          <div class="step-header">
+            <h2 id="builder-step-config-heading">Step 1 — Location, shifts and roster units</h2>
+            <p>Configure the duty cycle once and reuse it across the selected shifts. Identify operational units for deployment and
+              capture static non-operational assignments.</p>
+          </div>
+          <form id="rosterConfigForm" method="post" novalidate>
+            {% csrf_token %}
+            <input type="hidden" data-roster-builder-csrf-token value="{{ csrf_token }}">
+            <div class="config-stage" data-config-stage="1">
+              <div class="field-grid">
+                <div class="field-group">
+                  <label for="rosterTitle">Roster Title (optional)</label>
+                  <input id="rosterTitle" name="title" type="text" placeholder="e.g. {{ location.location }} Tower" autocomplete="off">
+                </div>
+                <div class="field-group">
+                  <label for="effectiveMonth">Roster Month</label>
+                  <input id="effectiveMonth" name="effective_month" type="month" required>
+                </div>
+                <div class="field-group">
+                  <label for="effectiveFrom">Effective From</label>
+                  <input id="effectiveFrom" name="effective_from" type="date" required>
+                </div>
+                <div class="field-group">
+                  <label for="rosterDuration">Roster Duration (days)</label>
+                  <input id="rosterDuration" name="duration_days" type="number" min="1" max="62" value="30" required>
+                </div>
+                <div class="field-group">
+                  <label for="shiftCount">Number of Shifts</label>
+                  <input id="shiftCount" name="shift_count" type="number" min="3" max="6" value="3" required>
+                </div>
+                <div class="field-group">
+                  <label for="shiftCycle">Shift Cycle Length (days)</label>
+                  <input id="shiftCycle" name="shift_cycle_length" type="number" min="3" max="6" value="3" required>
+                  <p class="unit-hint">Shift cycles and number of shifts must match.</p>
+                </div>
+                {% with timing_count=initial_timing_count|default:3 %}
+                  <div class="field-group">
+                    <label for="periodsOfDuty">Periods of Duty</label>
+                    <select
+                      id="periodsOfDuty"
+                      name="periods_of_duty"
+                      required
+                    >
+                      <option value="2"{% if timing_count == 2 %} selected{% endif %}>2 periods</option>
+                      <option value="3"{% if timing_count != 2 %} selected{% endif %}>3 periods</option>
+                    </select>
+                    <p class="unit-hint">Select either 2 or 3 duty changeovers per day. This controls the number of duty timings.</p>
+                  </div>
+                  <input id="timingCount" name="timing_count" type="hidden" value="{{ timing_count }}">
+                {% endwith %}
+              </div>
+              <div class="stage-actions step-actions">
+                {% if not roster %}
+                  <button
+                    id="loadPreviousConfiguration"
+                    type="button"
+                    class="step-button secondary"
+                    data-label="Load previous configuration"
+                    data-loading-label="Loading…"
+                  >Load previous configuration</button>
+                {% endif %}
+                <button id="configStage1Next" type="button" class="step-button primary">Continue</button>
+              </div>
+            </div>
+
+            <div class="config-stage" data-config-stage="2" hidden>
+              <div class="field-group">
+                <h3 id="shiftRowsHeading" class="field-label">Shift Teams</h3>
+                <p class="unit-hint">Provide the shift sequence and call sign (A, B, C…). Duty timings are controlled separately below.</p>
+                <div id="shiftRows" class="shift-rows" aria-live="polite" aria-labelledby="shiftRowsHeading"></div>
+              </div>
+
+              <div class="field-group">
+                <h3 id="timingRowsHeading" class="field-label">Duty Timings</h3>
+                <p class="unit-hint">Define each duty timing with a title and start/end window (for example Morning 0600–1400, Afternoon 1400–2200).</p>
+                <div id="timingRows" class="timing-rows" aria-live="polite" aria-labelledby="timingRowsHeading"></div>
+              </div>
+
+              <div class="field-group">
+                <h3 id="cycleRowsHeading" class="field-label">Shift Cycle Template</h3>
+                <p class="unit-hint">Describe a single cycle for one shift. Other shifts rotate through this pattern automatically.</p>
+                <div id="cycleRows" class="cycle-rows" aria-live="polite" aria-labelledby="cycleRowsHeading"></div>
+              </div>
+
+              <div class="stage-actions step-actions">
+                <button id="configStage2Back" type="button" class="step-button secondary">Back</button>
+                <button id="configStage2Next" type="button" class="step-button primary">Continue</button>
+              </div>
+            </div>
+
+            <div class="config-stage" data-config-stage="3" hidden>
+              <div class="field-group">
+                <h3 id="unitChecklistHeading" class="field-label">Operational Units</h3>
+                <p class="unit-hint">Tick every operational unit/position that must appear in the roster.</p>
+                <div
+                  id="unitChecklist"
+                  class="unit-checklist"
+                  role="group"
+                  aria-labelledby="unitChecklistHeading"
+                ></div>
+              </div>
+
+              <div class="field-group">
+                <h3 id="nonOperationalHeading" class="field-label">Non-operational Positions</h3>
+                <p class="unit-hint">Assign steady-state officers to non-operational positions. These selections persist between roster updates.</p>
+                <div
+                  id="nonOperationalAssignments"
+                  class="non-operational-list"
+                  aria-live="polite"
+                  aria-labelledby="nonOperationalHeading"
+                ></div>
+              </div>
+
+              <div class="field-grid">
+                <div class="field-group">
+                  <label for="developedBy">Developed by</label>
+                  <select id="developedBy" name="developed_by">
+                    <option value="">Select Facility Training Officer</option>
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label for="verifiedBy">Verified by</label>
+                  <select id="verifiedBy" name="verified_by">
+                    <option value="">Select Radar Facility Chief</option>
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label for="approvedBy">Approved by</label>
+                  <select id="approvedBy" name="approved_by">
+                    <option value="">Select COO/SATCO</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="stage-actions step-actions">
+                <button id="configStage3Back" type="button" class="step-button secondary">Back</button>
+                <button id="configNext" type="button" class="step-button primary">Continue to assignments</button>
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <section id="builder-step-assign" class="builder-step" aria-labelledby="builder-step-assign-heading" hidden>
+          <div class="step-header">
+            <h2 id="builder-step-assign-heading">Step 2 — Assign officers for each shift</h2>
+            <p>Start by defining the shift teams below — the roster automatically rotates your selections across every deployment day. You can still fine-tune individual dates when needed, and remarks remain optional.</p>
+          </div>
+          <div class="team-setup" aria-live="polite">
+            <div class="team-setup-header">
+              <h3 id="teamSetupHeading">Shift teams</h3>
+              <p class="unit-hint">Drag officers from the panel into the grid to build each shift team. Assignments made here seed every day in the roster cycle.</p>
+            </div>
+            <div id="teamSetupList" class="team-setup-board" aria-labelledby="teamSetupHeading"></div>
+          </div>
+          <div class="assignment-toolbar">
+            <span class="summary">Working month: <span id="assignmentMonthLabel"></span></span>
+            <span class="cycle">Shift cycle length: <span id="assignmentCycle"></span> day(s)</span>
+            <span class="duration">Duration: <span id="assignmentDuration"></span> day(s)</span>
+          </div>
+          <div id="rosterCalendar" class="roster-calendar" aria-live="polite"></div>
+          <div class="assignment-layout">
+            <aside class="day-selector" aria-label="Roster days">
+              <h3>Days</h3>
+              <ul id="dayList" class="day-list"></ul>
+            </aside>
+            <div>
+              <div id="assignmentColumns" class="assignment-columns" aria-live="polite"></div>
+            </div>
+          </div>
+          <div class="step-actions">
+            <button id="backToConfig" type="button" class="step-button secondary">Back to configuration</button>
+            <button id="saveRoster" type="button" class="step-button primary">Save roster</button>
+          </div>
+        </section>
+
+        <div id="builderStatus" class="builder-status" role="status" aria-live="polite" tabindex="-1"></div>
+      </div>
+    </section>
+  </div>
+
+  {{ unit_options|json_script:"unit-options-data" }}
+  {{ officer_options|json_script:"officer-options-data" }}
+  {{ fto_options|json_script:"fto-options-data" }}
+  {{ rfc_options|json_script:"rfc-options-data" }}
+  {{ approval_options|json_script:"approval-options-data" }}
+  {{ builder_meta|json_script:"roster-builder-meta" }}
+  {% if roster_data %}
+    {{ roster_data|json_script:"roster-initial-data" }}
+  {% endif %}
+{% endblock %}
