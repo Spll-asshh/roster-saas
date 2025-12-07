@@ -13,9 +13,7 @@
   --color-border: #e2e8f0;
   --color-muted: #64748b;
   --color-strong: #0f172a;
-  --color-background: radial-gradient(circle at 15% 20%, rgba(124, 58, 237, 0.06), transparent 32%),
-    radial-gradient(circle at 80% 0%, rgba(37, 99, 235, 0.08), transparent 28%),
-    #0b1221;
+  --color-background: #ffffff;
 
   --shadow-sm: 0 8px 20px -12px rgba(15, 23, 42, 0.3);
   --shadow-md: 0 12px 30px -16px rgba(15, 23, 42, 0.35);
@@ -53,12 +51,12 @@ a:hover {
 }
 
 .top-nav {
-  background: rgba(255, 255, 255, 0.06);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid #e2e8f0;
   position: sticky;
   top: 0;
   z-index: 20;
-  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px -22px rgba(15, 23, 42, 0.28);
 }
 
 .top-nav__inner {
@@ -75,7 +73,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  color: #e2e8f0;
+  color: var(--color-strong);
 }
 
 .brand__title {
@@ -86,7 +84,7 @@ a:hover {
 
 .brand__subtitle {
   font-size: 13px;
-  color: #cbd5e1;
+  color: var(--color-muted);
 }
 
 .top-nav__links {
@@ -99,17 +97,25 @@ a:hover {
   padding: 10px 14px;
   border-radius: var(--radius-sm);
   text-decoration: none;
-  font-weight: 600;
-  color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
+  font-weight: 700;
+  color: var(--color-strong);
+  border: 1px solid var(--color-border);
+  background: #f8fafc;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .nav-link:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
-  background: rgba(255, 255, 255, 0.08);
+  background: #e0e7ff;
+}
+
+.nav-link__icon {
+  width: 18px;
+  height: 18px;
 }
 
 .hero {
@@ -118,10 +124,10 @@ a:hover {
   gap: 28px;
   align-items: center;
   padding: 28px;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(16, 185, 129, 0.12));
+  background: linear-gradient(135deg, #0f172a, #1d4ed8 48%, #0ea5e9);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  color: #0f172a;
+  color: #e2e8f0;
 }
 
 .hero__tag {
@@ -141,11 +147,12 @@ a:hover {
   font-family: var(--font-heading);
   font-size: clamp(32px, 4vw, 44px);
   margin: 12px 0 8px;
+  color: #ffffff;
 }
 
 .hero p {
   margin: 8px 0 0;
-  color: #0b1021;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 1.05rem;
 }
 
@@ -254,9 +261,9 @@ a:hover {
 }
 
 .btn-outline {
-  background: transparent;
-  color: #e2e8f0;
-  border-color: rgba(255, 255, 255, 0.35);
+  background: #fff;
+  color: var(--color-strong);
+  border-color: #cbd5e1;
 }
 
 .btn-danger {
@@ -300,6 +307,28 @@ a:hover {
 .input-field textarea:focus {
   outline: 2px solid rgba(37, 99, 235, 0.35);
   border-color: rgba(37, 99, 235, 0.35);
+}
+
+.input-field__control {
+  position: relative;
+}
+
+.input-field__control input {
+  width: 100%;
+}
+
+.input-field--icon img {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+.input-field--icon input {
+  padding-left: 42px;
 }
 
 .layout-two {
