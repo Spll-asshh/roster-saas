@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Roster SaaS · Tenant Console</title>
+    <link rel="stylesheet" href="/ui.css" />
+    <style>
+      .icon-note { color: #94a3b8; font-size: 13px; margin-top: 6px; }
+      .cta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+      .cta-card { padding: 14px; border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.94); border: 1px solid var(--color-border); box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 10px; }
+      .cta-card h3 { margin: 0; font-family: var(--font-heading); font-size: 1.05rem; }
+      .cta-card p { margin: 0; color: var(--color-muted); }
+      .pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
+      .stat { padding: 10px 12px; background: rgba(255, 255, 255, 0.82); border-radius: var(--radius-sm); border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); }
+      .stat h4 { margin: 0 0 6px; font-family: var(--font-heading); }
+      .stat p { margin: 0; color: var(--color-muted); }
+    </style>
+  </head>
+  <body>
+    <nav class="top-nav">
+      <div class="top-nav__inner">
+        <div class="brand">
+          <span class="brand__title">Roster SaaS</span>
+          <span class="brand__subtitle">Modern roster deployment workspace</span>
+        </div>
+        <div class="top-nav__links">
+          <a class="nav-link" href="#tenant">Tenant Login</a>
+          <a class="nav-link" href="#actions">Actions</a>
+          <a class="nav-link" href="#design">Design System</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="main-shell">
+      <section class="hero" id="tenant">
+        <div>
+          <span class="hero__tag">Multi-tenant roster studio</span>
+          <h1>Build, publish, and print rosters in minutes.</h1>
+          <p>
+            A clean, unified front-end for your roster management micro-SaaS. Capture tenant context once, then flow through
+            roster building, review dashboards, and printable sheets without losing state.
+          </p>
+          <div class="pill-row" style="margin-top:12px;">
+            <span class="badge badge--primary">API: http://localhost:4000</span>
+            <span class="badge badge--accent">Header: x-tenant-id</span>
+          </div>
+        </div>
+        <div class="hero__panel">
+          <h3 class="section-heading">Tenant login</h3>
+          <p class="section-subtitle">Enter or paste your tenant ID to start.</p>
+          <div class="input-field">
+            <label for="tenantInput">Tenant ID</label>
+            <input id="tenantInput" type="text" placeholder="e.g., 32a5...bfaf" autocomplete="off" />
+            <p class="icon-note">Place an icon named <strong>tenant.svg</strong> inside <code>frontend/public/icons/</code> and show it beside this input if desired.</p>
+          </div>
+          <button id="enterTenant" class="btn btn-primary" type="button">Enter Tenant Dashboard</button>
+          <p id="tenantHint" class="icon-note"></p>
+        </div>
+      </section>
+
+      <section class="section-shell" id="actions">
+        <div class="layout-two">
+          <div class="card">
+            <h2 class="section-heading">Navigation</h2>
+            <p class="section-subtitle">Move through roster operations with tenant-aware links.</p>
+            <div class="cta-grid">
+              <div class="cta-card">
+                <h3>Roster Builder</h3>
+                <p>Create employees, shifts, and slots with live API calls.</p>
+                <button class="btn btn-secondary" data-target="location_roster_builder.html">Open Builder</button>
+              </div>
+              <div class="cta-card">
+                <h3>Roster List</h3>
+                <p>Browse saved rosters, filter by period, and jump to details.</p>
+                <button class="btn btn-primary" data-target="location_roster_list.html">View Rosters</button>
+              </div>
+              <div class="cta-card">
+                <h3>Reports Dashboard</h3>
+                <p>Summaries for leadership with quick links to print views.</p>
+                <button class="btn btn-outline" data-target="roster_reports_dashboard.html">Open Reports</button>
+              </div>
+              <div class="cta-card">
+                <h3>Print Center</h3>
+                <p>Printable roster sheets and deployment summaries.</p>
+                <button class="btn btn-ghost" data-target="roster_print.html">Go to Print</button>
+              </div>
+            </div>
+          </div>
+          <div class="card card--inset" id="design">
+            <h2 class="section-heading" style="color:#fff;">Design system</h2>
+            <p class="section-subtitle" style="color:#cbd5e1;">Consistent fonts, colors, and buttons across every page.</p>
+            <div class="stat">
+              <h4>Typography</h4>
+              <p>Headings: Poppins · Body: Inter</p>
+            </div>
+            <div class="stat">
+              <h4>Palette</h4>
+              <p>Primary: #2563eb · Secondary: #7c3aed · Accent: #10b981 · Surface: #ffffff</p>
+            </div>
+            <div class="stat">
+              <h4>Buttons</h4>
+              <p>Unified classes: <code>.btn-primary</code>, <code>.btn-secondary</code>, <code>.btn-outline</code>, <code>.btn-danger</code>.</p>
+            </div>
+            <p class="icon-note">Place navigation icons named <strong>home.svg</strong>, <strong>builder.svg</strong>, <strong>list.svg</strong>, and <strong>reports.svg</strong> inside <code>frontend/public/icons/</code>. Use them inside the top navigation if you want visuals.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const tenantInput = document.getElementById('tenantInput');
+      const enterTenantBtn = document.getElementById('enterTenant');
+      const tenantHint = document.getElementById('tenantHint');
+
+      function persistTenant(id) {
+        if (!id) return;
+        localStorage.setItem('rosterTenantId', id);
+      }
+
+      function getTenantFromStorage() {
+        return localStorage.getItem('rosterTenantId') || '';
+      }
+
+      function buildLink(target) {
+        const tenant = (tenantInput.value || '').trim();
+        return tenant ? `${target}?tenant=${encodeURIComponent(tenant)}` : target;
+      }
+
+      function updateButtons() {
+        document.querySelectorAll('[data-target]').forEach((btn) => {
+          const target = btn.getAttribute('data-target');
+          btn.onclick = () => {
+            const href = buildLink(target);
+            if (tenantInput.value.trim()) {
+              persistTenant(tenantInput.value.trim());
+            }
+            window.location.href = href;
+          };
+        });
+      }
+
+      enterTenantBtn.addEventListener('click', () => {
+        const tenant = tenantInput.value.trim();
+        if (!tenant) {
+          tenantHint.textContent = 'Please provide a tenant ID to continue.';
+          return;
+        }
+        persistTenant(tenant);
+        tenantHint.textContent = `Tenant ID saved. Redirecting to roster list...`;
+        window.location.href = `location_roster_list.html?tenant=${encodeURIComponent(tenant)}`;
+      });
+
+      const stored = getTenantFromStorage();
+      if (stored && !tenantInput.value) {
+        tenantInput.value = stored;
+        tenantHint.textContent = `Loaded tenant ${stored} from your last session.`;
+      }
+
+      updateButtons();
+    </script>
+  </body>
+</html>

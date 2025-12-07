@@ -4,13 +4,16 @@
 <head>
     <meta charset="utf-8">
     <title>Roster – {{ header_title }}</title>
+    <link rel="stylesheet" href="/ui.css" />
     <style>
         @page { size: A4 landscape; margin: 16mm 12mm 18mm; }
-        body { margin: 0; font-family: "Helvetica", Arial, sans-serif; background: #f3f6f9; color: #1f2937; min-height: 100vh; display: flex; flex-direction: column; }
-        .wrapper { flex: 1 0 auto; max-width: 260mm; margin: 0 auto; padding: 8mm 0 24mm; display: flex; flex-direction: column; gap: 18px; }
-        .no-print { position: fixed; top: 16px; right: 24px; z-index: 50; }
-        .no-print button { background: #0c4b33; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; box-shadow: 0 12px 24px -20px rgba(12, 75, 51, 0.65); }
-        .no-print button:hover { background: #128f8b; }
+        body { margin: 0; font-family: var(--font-body); background: #f3f6f9; color: #1f2937; min-height: 100vh; display: flex; flex-direction: column; }
+        .top-nav-print { position: fixed; top: 0; left: 0; right: 0; background: rgba(15, 23, 42, 0.92); color: #e2e8f0; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; box-shadow: var(--shadow-md); }
+        .top-nav-print a { color: #e2e8f0; text-decoration: none; font-weight: 600; }
+        .wrapper { flex: 1 0 auto; max-width: 260mm; margin: 60px auto 0; padding: 8mm 0 24mm; display: flex; flex-direction: column; gap: 18px; }
+        .no-print { position: fixed; top: 12px; right: 24px; z-index: 60; display: flex; gap: 8px; }
+        .no-print button, .no-print a { background: #2563eb; color: #fff; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; box-shadow: 0 12px 24px -20px rgba(37, 99, 235, 0.65); text-decoration: none; font-weight: 700; }
+        .no-print button:hover, .no-print a:hover { background: #1d4ed8; }
         .form-header { display: grid; grid-template-columns: 70px 1fr auto; gap: 16px; align-items: center; background: linear-gradient(135deg, #0097B2, #128F8B); color: #fff; padding: 12px 18px; border-radius: 16px; }
         .form-header img { width: 70px; height: auto; }
         .form-heading { text-align: center; letter-spacing: 0.04em; }
@@ -75,16 +78,27 @@
         .signature-name { font-size: 11px; font-weight: 500; color: #0f172a; }
 
         @media print {
-            .no-print { display: none; }
+            .no-print, .top-nav-print { display: none; }
             body { background: #fff; }
-            .wrapper { padding-bottom: 0; }
+            .wrapper { padding-top: 8mm; }
             .shift-block { page-break-inside: avoid; }
             .day-card { page-break-inside: avoid; }
         }
     </style>
 </head>
 <body>
-    <div class="no-print"><button type="button" onclick="window.print()">🖨 Print</button></div>
+    <div class="top-nav-print">
+      <div>Roster SaaS · Printable view</div>
+      <div class="footer-links">
+        <a href="/index.html">Home</a>
+        <a href="/location_roster_list.html">Tenant Dashboard</a>
+        <a href="/roster_reports_dashboard.html">Reports</a>
+      </div>
+    </div>
+    <div class="no-print">
+      <a href="/index.html">Exit</a>
+      <button type="button" onclick="window.print()">🖨 Print</button>
+    </div>
     <div class="wrapper">
         <div class="form-header">
             <img src="{% static 'reports/paa_logo.png' %}" alt="PAA Logo" />
