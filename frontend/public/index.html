@@ -25,9 +25,22 @@
           <span class="brand__subtitle">Modern roster deployment workspace</span>
         </div>
         <div class="top-nav__links">
-          <a class="nav-link" href="#tenant">Tenant Login</a>
-          <a class="nav-link" href="#actions">Actions</a>
-          <a class="nav-link" href="#design">Design System</a>
+          <a class="nav-link" href="#tenant">
+            <img class="nav-link__icon" src="/icons/home.svg" alt="Home" />
+            Home
+          </a>
+          <a class="nav-link" data-target="location_roster_builder.html" href="location_roster_builder.html">
+            <img class="nav-link__icon" src="/icons/builder.svg" alt="Builder" />
+            Builder
+          </a>
+          <a class="nav-link" data-target="location_roster_list.html" href="location_roster_list.html">
+            <img class="nav-link__icon" src="/icons/list.svg" alt="Roster list" />
+            Rosters
+          </a>
+          <a class="nav-link" data-target="roster_reports_dashboard.html" href="roster_reports_dashboard.html">
+            <img class="nav-link__icon" src="/icons/reports.svg" alt="Reports" />
+            Reports
+          </a>
         </div>
       </div>
     </nav>
@@ -51,8 +64,11 @@
           <p class="section-subtitle">Enter or paste your tenant ID to start.</p>
           <div class="input-field">
             <label for="tenantInput">Tenant ID</label>
-            <input id="tenantInput" type="text" placeholder="e.g., 32a5...bfaf" autocomplete="off" />
-            <p class="icon-note">Place an icon named <strong>tenant.svg</strong> inside <code>frontend/public/icons/</code> and show it beside this input if desired.</p>
+            <div class="input-field__control input-field--icon">
+              <img src="/icons/tenant.svg" alt="Tenant icon" />
+              <input id="tenantInput" type="text" placeholder="e.g., 32a5...bfaf" autocomplete="off" />
+            </div>
+            <p class="icon-note">We'll remember your tenant ID for quick navigation across pages.</p>
           </div>
           <button id="enterTenant" class="btn btn-primary" type="button">Enter Tenant Dashboard</button>
           <p id="tenantHint" class="icon-note"></p>
@@ -127,16 +143,30 @@
         return tenant ? `${target}?tenant=${encodeURIComponent(tenant)}` : target;
       }
 
-      function updateButtons() {
-        document.querySelectorAll('[data-target]').forEach((btn) => {
-          const target = btn.getAttribute('data-target');
-          btn.onclick = () => {
+      function updateAnchorHrefs() {
+        document.querySelectorAll('a[data-target]').forEach((link) => {
+          link.setAttribute('href', buildLink(link.getAttribute('data-target')));
+        });
+      }
+
+      function bindTargetedElements() {
+        document.querySelectorAll('[data-target]').forEach((el) => {
+          const target = el.getAttribute('data-target');
+          const isAnchor = el.tagName.toLowerCase() === 'a';
+
+          el.addEventListener('click', (event) => {
             const href = buildLink(target);
             if (tenantInput.value.trim()) {
               persistTenant(tenantInput.value.trim());
             }
-            window.location.href = href;
-          };
+
+            if (!isAnchor) {
+              event.preventDefault();
+              window.location.href = href;
+            } else {
+              el.setAttribute('href', href);
+            }
+          });
         });
       }
 
@@ -157,7 +187,9 @@
         tenantHint.textContent = `Loaded tenant ${stored} from your last session.`;
       }
 
-      updateButtons();
+      updateAnchorHrefs();
+      tenantInput.addEventListener('input', updateAnchorHrefs);
+      bindTargetedElements();
     </script>
   </body>
 </html>
