@@ -1,18 +1,30 @@
 require('dotenv').config();
 
+const baseConfig = {
+  client: 'pg',
+  migrations: {
+    tableName: 'knex_migrations',
+    directory: './migrations'
+  }
+};
+
+function connectionFromEnv(prefix = 'DB') {
+  return {
+    host: process.env[`${prefix}_HOST`],
+    port: process.env[`${prefix}_PORT`],
+    user: process.env[`${prefix}_USER`],
+    password: process.env[`${prefix}_PASSWORD`],
+    database: process.env[`${prefix}_NAME`]
+  };
+}
+
 module.exports = {
   development: {
-    client: 'pg',
-    connection: {
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
-    },
-    migrations: {
-      tableName: 'knex_migrations',
-      directory: './migrations'
-    }
+    ...baseConfig,
+    connection: connectionFromEnv('DB')
+  },
+  test: {
+    ...baseConfig,
+    connection: connectionFromEnv('DB_TEST').host ? connectionFromEnv('DB_TEST') : connectionFromEnv('DB')
   }
 };

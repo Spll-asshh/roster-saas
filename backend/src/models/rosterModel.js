@@ -13,11 +13,18 @@ async function createRoster(tenantId, data) {
       name: data.name,
       location: data.location,
       start_date: data.start_date,
-      end_date: data.end_date
+      end_date: data.end_date,
+      shift_mode: data.shift_mode || 'rotation'
     })
     .returning('*');
 
   return roster;
+}
+
+async function getRosterById(tenantId, rosterId) {
+  return db('rosters')
+    .where({ tenant_id: tenantId, id: rosterId })
+    .first();
 }
 
 async function addSlot(tenantId, data) {
@@ -60,6 +67,7 @@ async function listRosterSlots(tenantId, rosterId) {
 module.exports = {
   listRosters,
   createRoster,
+  getRosterById,
   addSlot,
   listRosterSlots
 };
